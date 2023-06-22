@@ -1,17 +1,31 @@
 import React, { useState } from "react";
+import {Link} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { UserAuth } from "../context/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
-  const [pass, setPass] = useState("");
+  const [password, setPassword] = useState("");
+  const [err,setErr] = useState("");
+  const navigate = useNavigate();
+  const {signIn} = UserAuth();
 
-  const handleSubmit = () => {
-    email.preventDefault();
-    console.log(email);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setErr('');
+    try {
+      await signIn(email,password)
+      navigate('/account')
+    } catch (e) {
+      setErr(e.message)
+      alert(e.message)
+    }
   };
+
   return (
     <div className="flex flex-col">
       <h1 className="text-white mb-20 font-bold text-7xl font-serif">Audify</h1>
-      <form action="" className="flex flex-col justify-center">
+      <form action="" className="flex flex-col justify-center" onSubmit={handleSubmit}>
         {/* <label>Email</label> */}
         <input
           value={email}
@@ -24,8 +38,8 @@ const Login = () => {
         />
         {/* <label>Password</label> */}
         <input
-          value={pass}
-          onChange={(e) => setPass(e.target.value)}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           type="password"
           placeholder="Your Password"
           id="password"
@@ -41,9 +55,9 @@ const Login = () => {
       </form>
       <div className="mt-20">
         <p className="text-gray-500">-Don't have an account-</p>
-        <button className="mt-3 border-white-50 text-white bg-transparent border border-white hover:bg-white hover:text-black rounded-full px-16 py-2">
+        <Link to="/signup"><button className="mt-3 border-white-50 text-white bg-transparent border border-white hover:bg-white hover:text-black rounded-full px-16 py-2">
           Sign Up here
-        </button>
+        </button></Link>
       </div>
       {/* <footer className="text-white ">2023</footer> */}
     </div>
