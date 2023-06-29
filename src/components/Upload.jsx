@@ -58,7 +58,7 @@ export default function Upload() {
         </nav>
       </div>
       {/* Buttons for uploading,editing,generating text from audio etc. */}
-      <div className="h-screen flex flex-col lg:flex-row items-center justify-center gap-10 text-center ">
+      <div className="h-screen flex  items-center justify-center gap-10 text-center ">
         <div className="bg-gray-500/30 p-8 rounded-xl mix-blend-luminosity hover:border border-slate-500 border-spacing-2 hover:scale-110 ">
           <h4 className="text-white uppercase text-xl font-bold">Upload</h4>
           <p className="text-white leading-10 my-6 mx-6 text-md font-light opacity-50">
