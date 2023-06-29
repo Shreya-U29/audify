@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import logo from "./logo.svg";
 import "./App.css";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
-import Account from "./components/Account";
+import Home from "./components/Home";
+import Upload from "./components/Upload";
+import Dashboard from "./components/Dashboard";
 import {
   BrowserRouter as Router,
   Switch,
@@ -32,10 +33,18 @@ function App() {
           <Routes>
             <Route exact path="/signup" element={<Signup />}></Route>
             <Route exact path="/" element={<Login />}></Route>
-            <Route exact path="/account" element=
-            {<ProtectedRoutes>
-              <Account />
-            </ProtectedRoutes>}></Route>
+            <Route
+              exact
+              path="/home"
+              element={
+                <ProtectedRoutes>
+                  {/* <Account /> */}
+                  <Home />
+                </ProtectedRoutes>
+              }
+            ></Route>
+            <Route exact path="/dashboard" element={<Dashboard />}></Route>
+            <Route exact path="/upload" element={<Upload />}></Route>
           </Routes>
         </Router>
       </AuthContextProvider>
