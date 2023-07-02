@@ -43,8 +43,14 @@ function App() {
                 </ProtectedRoutes>
               }
             ></Route>
-            <Route exact path="/dashboard" element={<Dashboard />}></Route>
-            <Route exact path="/upload" element={<Upload />}></Route>
+            <Route exact path="/dashboard" element={<ProtectedRoutes>
+              <Dashboard />
+            </ProtectedRoutes>
+            }></Route>
+            <Route exact path="/upload" element={<ProtectedRoutes>
+              <Upload />
+            </ProtectedRoutes>
+            }></Route>
           </Routes>
         </Router>
       </AuthContextProvider>
