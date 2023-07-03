@@ -21,6 +21,56 @@ export default function Upload() {
   const showMenu = () => {
     setActive(!active);
   };
+
+  const [files, setfiles] = useState()
+
+  const handleUpload=(e)=>{
+    const formData = new FormData()
+    const file = e.target.files[0]
+    setfiles(file);
+    formData.append("file",file)
+    console.log(file)    
+    try {
+      fetch('http://127.0.0.1:5000/upload', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(res => res.json())
+    .then(data => console.log(data));
+      
+    } catch (error) {
+      console.log("Internal Server Error occured")
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    try {
+      if (!files) {
+        console.log("No file found");
+      } else {
+        const response = await fetch("http://127.0.0.1:5000/convert", {
+          method: "GET",
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "audio.mp3";
+          link.click();
+
+          URL.revokeObjectURL(url);
+        } else {
+          console.log("Error occurred during conversion");
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div>
       {/* Navbar section */}
@@ -31,7 +81,7 @@ export default function Upload() {
 
         <nav>
           <div className="md:hidden scale-125 hover:scale-150">
-            <button class="material-icons-outlined" onClick={showMenu}>
+            <button className="material-icons-outlined" onClick={showMenu}>
               menu
             </button>
           </div>
@@ -72,7 +122,8 @@ export default function Upload() {
       file:rounded-full file:border-spacing-2
       file:text-sm file:bg-transparent
       hover:cursor-pointer
-     "
+     "    
+     onChange={handleUpload}
           />
         </div>
 
@@ -81,7 +132,7 @@ export default function Upload() {
           <p className="text-white leading-10 my-6 mx-6 text-md font-light opacity-50">
             Convert video into audio files
           </p>
-          <button className="bg-transparent border border-spacing-4 text-white hover:bg-white hover:text-black py-2.5 px-8 rounded-full">
+          <button onClick={handleSubmit} className="bg-transparent border border-spacing-4 text-white hover:bg-white hover:text-black py-2.5 px-8 rounded-full">
             Convert
           </button>
         </div>
