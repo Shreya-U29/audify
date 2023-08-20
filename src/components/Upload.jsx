@@ -1,11 +1,52 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { UserAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import MenuItems from "./MenuItems";
 import "material-icons/iconfont/material-icons.css";
+import {app} from '../firebase';
+// import firebase from 'firebase/app';
+import { getFirestore, collection,addDoc,setDoc,doc, getDoc} from "firebase/firestore";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL  } from "firebase/storage";
 
 export default function Upload() {
+  const db = getFirestore(app);
+  const userCollection = collection(db, "UserCollection");
+  const storage = getStorage(app);
+
+  const [file, setFile] = useState("");
+ 
+    // progress
+    const [percent, setPercent] = useState(0);
+
+  function handleFileUpload(file) {
+    if (!file) {
+        alert("Please choose a file first!")
+    }
+ 
+    const storageRef = ref(storage,`/videoFiles/${file.name}`)
+    const uploadTask = uploadBytesResumable(storageRef, file);
+ 
+    uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+            const percent = Math.round(
+                (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            );
+ 
+            // update progress
+            setPercent(percent);
+        },
+        (err) => console.log(err),
+        () => {
+            // download url
+            getDownloadURL(uploadTask.snapshot.ref).then((url) => {
+                console.log(url);
+            });
+        }
+    ); 
+}
+  
   const { user, logout } = UserAuth();
   const Navigate = useNavigate();
   const handleLogout = async () => {
@@ -22,12 +63,15 @@ export default function Upload() {
     setActive(!active);
   };
 
-  const [files, setfiles] = useState()
+  const [files, setfiles] = useState();
+  const [videos, setVideos] = useState([]);
 
   const handleUpload=(e)=>{
     const formData = new FormData()
     const file = e.target.files[0]
     setfiles(file);
+    handleFileUpload(file);
+    setUserVideos(file);
     formData.append("file",file)
     console.log(file)    
     try {
@@ -43,6 +87,34 @@ export default function Upload() {
     }
   }
 
+  async function setUserVideos(file) {
+    if (user) {
+      try {
+        const userUID = user.uid;
+        const userDocRef = doc(db, "UserCollection", userUID);
+        const docSnapshot = await getDoc(userDocRef);
+  
+        if (docSnapshot.exists()) {
+          const userData = docSnapshot.data();
+          const videos = userData.videos;
+          setVideos(videos);
+          const documentData = {
+            uid: userUID,
+            videos: [...videos, file.name],
+          };
+    
+          // Add the document to the collection
+          await setDoc(userDocRef, documentData);
+          // Do something with the audios data
+        } else {
+          console.log("Document does not exist");
+        }
+      } catch(e) {
+        console.log(e);
+      }
+    }
+  }
+
   const handleSubmit = async (e) => {
     try {
       if (!files) {
@@ -55,7 +127,7 @@ export default function Upload() {
         if (response.ok) {
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
-
+          
           const link = document.createElement("a");
           link.href = url;
           link.download = "audio.mp3";
