@@ -17,7 +17,7 @@ export default function Upload() {
   const [file, setFile] = useState("");
  
     // progress
-    const [percent, setPercent] = useState(0);
+  const [percent, setPercent] = useState(0);
 
   function handleFileUpload(file) {
     if (!file) {
