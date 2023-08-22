@@ -14,17 +14,17 @@ export default function Upload() {
   const userCollection = collection(db, "UserCollection");
   const storage = getStorage(app);
 
-  const [file, setFile] = useState("");
+  const [fileName, setFileName] = useState("");
  
     // progress
   const [percent, setPercent] = useState(0);
 
-  function handleFileUpload(file) {
+  function handleFileUpload(file, type) {
     if (!file) {
         alert("Please choose a file first!")
     }
  
-    const storageRef = ref(storage,`/videoFiles/${file.name}`)
+    const storageRef = ref(storage,`/${type}/${file.name}`)
     const uploadTask = uploadBytesResumable(storageRef, file);
  
     uploadTask.on(
@@ -64,16 +64,18 @@ export default function Upload() {
   };
 
   const [files, setfiles] = useState();
-  const [videos, setVideos] = useState([]);
+  const [audios, setAudios] = useState([]);
 
   const handleUpload=(e)=>{
     const formData = new FormData()
     const file = e.target.files[0]
     setfiles(file);
-    handleFileUpload(file);
-    setUserVideos(file);
-    formData.append("file",file)
-    console.log(file)    
+    // handleFileUpload(file, "audios");
+    formData.append("file",file);
+    const d = new Date();
+    let time = d.getTime();
+    const fileName = file.name.replace(".","_")+time;
+    setFileName(fileName);
     try {
       fetch('http://127.0.0.1:5000/upload', {
         method: 'POST',
@@ -87,7 +89,7 @@ export default function Upload() {
     }
   }
 
-  async function setUserVideos(file) {
+  async function setUserAudios(file) {
     if (user) {
       try {
         const userUID = user.uid;
@@ -96,11 +98,11 @@ export default function Upload() {
   
         if (docSnapshot.exists()) {
           const userData = docSnapshot.data();
-          const videos = userData.videos;
-          setVideos(videos);
+          const audios = userData.audios?userData.audios:[];
+          setAudios(audios);
           const documentData = {
             uid: userUID,
-            videos: [...videos, file.name],
+            audios: [...audios, fileName+'.mpeg'],
           };
     
           // Add the document to the collection
@@ -126,11 +128,18 @@ export default function Upload() {
 
         if (response.ok) {
           const blob = await response.blob();
+          blob.name = fileName+'.mpeg';
+          blob.lastModified = new Date();
+          const audioFile = new File([blob], fileName+'.mpeg', {
+            type: blob.type,
+          });
+          setUserAudios(audioFile);
+          handleFileUpload(audioFile, "audios");
           const url = URL.createObjectURL(blob);
           
           const link = document.createElement("a");
           link.href = url;
-          link.download = "audio.mp3";
+          link.download = fileName+".mp3";
           link.click();
 
           URL.revokeObjectURL(url);
