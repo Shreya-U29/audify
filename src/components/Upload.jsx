@@ -1,11 +1,52 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { UserAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import MenuItems from "./MenuItems";
 import "material-icons/iconfont/material-icons.css";
+import {app} from '../firebase';
+// import firebase from 'firebase/app';
+import { getFirestore, collection,addDoc,setDoc,doc, getDoc} from "firebase/firestore";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL  } from "firebase/storage";
 
 export default function Upload() {
+  const db = getFirestore(app);
+  const userCollection = collection(db, "UserCollection");
+  const storage = getStorage(app);
+
+  const [fileName, setFileName] = useState("");
+ 
+    // progress
+  const [percent, setPercent] = useState(0);
+
+  function handleFileUpload(file, type) {
+    if (!file) {
+        alert("Please choose a file first!")
+    }
+ 
+    const storageRef = ref(storage,`/${type}/${file.name}`)
+    const uploadTask = uploadBytesResumable(storageRef, file);
+ 
+    uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+            const percent = Math.round(
+                (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            );
+ 
+            // update progress
+            setPercent(percent);
+        },
+        (err) => console.log(err),
+        () => {
+            // download url
+            getDownloadURL(uploadTask.snapshot.ref).then((url) => {
+                console.log(url);
+            });
+        }
+    ); 
+}
+  
   const { user, logout } = UserAuth();
   const Navigate = useNavigate();
   const handleLogout = async () => {
@@ -22,14 +63,19 @@ export default function Upload() {
     setActive(!active);
   };
 
-  const [files, setfiles] = useState()
+  const [files, setfiles] = useState();
+  const [audios, setAudios] = useState([]);
 
   const handleUpload=(e)=>{
     const formData = new FormData()
     const file = e.target.files[0]
     setfiles(file);
-    formData.append("file",file)
-    console.log(file)    
+    // handleFileUpload(file, "audios");
+    formData.append("file",file);
+    const d = new Date();
+    let time = d.getTime();
+    const fileName = file.name.replace(".","_")+time;
+    setFileName(fileName);
     try {
       fetch('http://127.0.0.1:5000/upload', {
         method: 'POST',
@@ -40,6 +86,34 @@ export default function Upload() {
       
     } catch (error) {
       console.log("Internal Server Error occured")
+    }
+  }
+
+  async function setUserAudios(file) {
+    if (user) {
+      try {
+        const userUID = user.uid;
+        const userDocRef = doc(db, "UserCollection", userUID);
+        const docSnapshot = await getDoc(userDocRef);
+  
+        if (docSnapshot.exists()) {
+          const userData = docSnapshot.data();
+          const audios = userData.audios?userData.audios:[];
+          setAudios(audios);
+          const documentData = {
+            uid: userUID,
+            audios: [...audios, fileName+'.mpeg'],
+          };
+    
+          // Add the document to the collection
+          await setDoc(userDocRef, documentData);
+          // Do something with the audios data
+        } else {
+          console.log("Document does not exist");
+        }
+      } catch(e) {
+        console.log(e);
+      }
     }
   }
 
@@ -54,11 +128,18 @@ export default function Upload() {
 
         if (response.ok) {
           const blob = await response.blob();
+          blob.name = fileName+'.mpeg';
+          blob.lastModified = new Date();
+          const audioFile = new File([blob], fileName+'.mpeg', {
+            type: blob.type,
+          });
+          setUserAudios(audioFile);
+          handleFileUpload(audioFile, "audios");
           const url = URL.createObjectURL(blob);
-
+          
           const link = document.createElement("a");
           link.href = url;
-          link.download = "audio.mp3";
+          link.download = fileName+".mp3";
           link.click();
 
           URL.revokeObjectURL(url);

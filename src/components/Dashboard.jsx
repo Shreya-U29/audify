@@ -1,13 +1,44 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { UserAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import MenuItems from "./MenuItems";
 import "material-icons/iconfont/material-icons.css";
+import { app } from '../firebase';
+import { getFirestore, collection, addDoc, setDoc, doc, getDoc } from "firebase/firestore";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 
 export default function Dashboard() {
   const { user, logout } = UserAuth();
+  const db = getFirestore(app);
+  const [audios, setAudios] = useState([]);
   const Navigate = useNavigate();
+
+  async function getUserAudios() {
+    if (user) {
+      try {
+        const userUID = user.uid;
+        const userDocRef = doc(db, "UserCollection", userUID);
+        const docSnapshot = await getDoc(userDocRef);
+
+        if (docSnapshot.exists()) {
+          const userData = docSnapshot.data();
+          const audios = userData.audios;
+          setAudios(audios);
+          // Do something with the audios data
+        } else {
+          console.log("Document does not exist");
+        }
+      } catch(e) {
+        console.log(e);
+      }
+    }
+  }
+
+  useEffect(() => {
+    getUserAudios();
+  }, [user]);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -24,7 +55,7 @@ export default function Dashboard() {
   return (
     <div>
       {/* Navbar section */}
-      <div className="text-white fixed w-full flex justify-between p-4 items-center">
+      <div className="text-white w-full flex justify-between p-4 items-center">
         <div className="text-2xl font-bold text-center">
           <h1 className="text-4xl ">Audify</h1>
         </div>
@@ -56,6 +87,22 @@ export default function Dashboard() {
           </ul>
           <MenuItems showMenu={showMenu} active={active}></MenuItems>
         </nav>
+
+      </div>
+      <div style={{ textAlign: "center", color: "white" }}>
+        <ul>
+          {audios ? audios.map((audio) => {
+            const link = `https://firebasestorage.googleapis.com/v0/b/audify-c5c34.appspot.com/o/audios%2F${audio}?alt=media`;
+            return (
+              <>
+               
+                <li><a href={link} target="_blank" style={{ textDecoration: "underline", cursor: "pointer" }} >{audio}</a></li>
+                
+              </>
+            )
+          }
+          ) : <li>Loading...</li>}
+        </ul>
       </div>
       {/* Logged-in account-details */}
       <div className="absolute bottom-0 right-0">
