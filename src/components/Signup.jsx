@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { AuthContextProvider,UserAuth } from "../context/AuthContext";
+import { AuthContextProvider, UserAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -9,25 +9,29 @@ const Signup = () => {
   const [err, setErr] = useState("");
   const navigate = useNavigate();
 
-  const {createUser} = UserAuth()
+  const { createUser } = UserAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     // console.log(email);
-    setErr('')
+    setErr("");
     try {
-      await createUser(email,password);
-      navigate('/home')
+      await createUser(email, password);
+      navigate("/home");
     } catch (error) {
-      setErr(error.message)
-      alert(error.message)
+      setErr(error.message);
+      alert(error.message);
     }
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="h-screen flex flex-col justify-center items-center text-center ">
       <h1 className="text-white mb-20 font-bold text-7xl font-serif">Audify</h1>
-      <form action="" className="flex flex-col justify-center" onSubmit={handleSubmit}>
+      <form
+        action=""
+        className="flex flex-col justify-center"
+        onSubmit={handleSubmit}
+      >
         {/* <label>Name</label>
         <input
           value={name}
@@ -65,6 +69,14 @@ const Signup = () => {
           Sign Up
         </button>
       </form>
+      <div className="mt-20">
+        <p className="text-gray-500">-Already have an account-</p>
+        <Link to="/">
+          <button className="mt-3 border-white-50 text-white bg-transparent border border-white hover:bg-white hover:text-black rounded-full px-16 py-2">
+            Login here
+          </button>
+        </Link>
+      </div>
       {/* <footer className="text-white ">2023</footer> */}
     </div>
   );

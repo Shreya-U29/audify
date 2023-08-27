@@ -54,7 +54,7 @@ const Login = () => {
           type="sumbit"
           className="text-white text-center bg-transparent hover:bg-white hover:text-black rounded-full mt-3 px-4 py-2 border border-white"
         >
-          Sign In
+          Login
         </button>
       </form>
       <div className="mt-20">

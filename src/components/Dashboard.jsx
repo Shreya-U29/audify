@@ -4,15 +4,31 @@ import { UserAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import MenuItems from "./MenuItems";
 import "material-icons/iconfont/material-icons.css";
-import { app } from '../firebase';
-import { getFirestore, collection, addDoc, setDoc, doc, getDoc } from "firebase/firestore";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { Howl } from "howler";
+import { app } from "../firebase";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  setDoc,
+  doc,
+  getDoc,
+} from "firebase/firestore";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
+import { arrayRemove, updateDoc } from "firebase/firestore";
+import { deleteObject } from "firebase/storage";
 
 export default function Dashboard() {
   const { user, logout } = UserAuth();
   const db = getFirestore(app);
   const [audios, setAudios] = useState([]);
   const Navigate = useNavigate();
+  const [audioDurations, setAudioDurations] = useState({});
 
   async function getUserAudios() {
     if (user) {
@@ -29,7 +45,7 @@ export default function Dashboard() {
         } else {
           console.log("Document does not exist");
         }
-      } catch(e) {
+      } catch (e) {
         console.log(e);
       }
     }
@@ -87,25 +103,58 @@ export default function Dashboard() {
           </ul>
           <MenuItems showMenu={showMenu} active={active}></MenuItems>
         </nav>
+      </div>
 
+      {/* Link on the dashboard */}
+
+      {/* style={{ textAlign: "center", color: "white" }} */}
+      <div className="grid grid-rows-3 grid-flow-col mx-14">
+        {/* <section className="h-screen flex flex-col justify-center items-center w-64 h-24 gap-10 text-center"> */}
+        <div>
+          <ul>
+            {audios ? (
+              audios.map((audio, index) => {
+                const audioname = `Audio ${index + 1}`;
+                const link = `https://firebasestorage.googleapis.com/v0/b/audify-c5c34.appspot.com/o/audios%2F${audio}?alt=media`;
+
+                return (
+                  <>
+                    <li className="bg-gray-500/30 p-8 rounded-xl   hover:scale-110 my-8">
+                      <p className="text-left text-sm text-yellow-400/60">
+                        <span
+                          className="material-icons mr-2 text-xl"
+                          style={{ color: "yellow" }}
+                        >
+                          audiotrack
+                        </span>
+                        Listen to &emsp;
+                        <span className="">
+                          <a
+                            href={link}
+                            target="_blank"
+                            className="text-white hover:underline text-lg "
+                          >
+                            {audioname}
+                          </a>
+                        </span>
+                      </p>
+                    </li>
+                  </>
+                );
+              })
+            ) : (
+              <li className="text-white font-light italic text-center">
+                Try converting video into mp3 audio files in the Uploads
+                section...
+              </li>
+            )}
+          </ul>
+        </div>
       </div>
-      <div style={{ textAlign: "center", color: "white" }}>
-        <ul>
-          {audios ? audios.map((audio) => {
-            const link = `https://firebasestorage.googleapis.com/v0/b/audify-c5c34.appspot.com/o/audios%2F${audio}?alt=media`;
-            return (
-              <>
-               
-                <li><a href={link} target="_blank" style={{ textDecoration: "underline", cursor: "pointer" }} >{audio}</a></li>
-                
-              </>
-            )
-          }
-          ) : <li>Loading...</li>}
-        </ul>
-      </div>
+      {/* end of link */}
+
       {/* Logged-in account-details */}
-      <div className="absolute bottom-0 right-0">
+      <div style={{ position: "fixed", bottom: 0, right: 0 }}>
         <p className="text-gray-200/50 ">--Logged in as--</p>
         <p className="text-white  mb-4 mr-4 hover:underline underline-offset-1">
           {user.email}
